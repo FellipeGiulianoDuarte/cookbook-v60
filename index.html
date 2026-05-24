@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cookbook V60</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root { --bg:#f7efe2; --ink:#3a2414; --accent:#8b4513; --espresso:#5b3a1c; --cream:#f6ecdc;
+          --card:#fffdf9; --line:#e3d3bd; --line2:#e6d6bf; --muted:#9c7a52; --sub:#7a5c3a; --body:#5a432d; --track:#e7d8c1; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Spline Sans',system-ui,sans-serif; }
+  .font-display { font-family:'Fraunces',Georgia,serif; }
+  .wrap { max-width:768px; margin:0 auto; padding:0 20px 80px; }
+
+  nav.bar { position:sticky; top:0; z-index:20; display:flex; gap:8px; overflow-x:auto;
+            margin:0 -20px 8px; padding:12px 20px; border-bottom:1px solid var(--line2);
+            background:rgba(247,239,226,.92); backdrop-filter:blur(10px); }
+  nav.bar button { white-space:nowrap; border:1px solid transparent; border-radius:999px; background:#efe2cf;
+                   padding:7px 15px; font-size:14px; font-family:inherit; color:#6b4f30; cursor:pointer; transition:.18s; }
+  nav.bar button:hover { background:#e5d4ba; }
+  nav.bar button.active { background:var(--espresso); color:var(--cream); box-shadow:0 2px 10px rgba(91,58,28,.3); }
+
+  header.hero { padding:48px 0; text-align:center; }
+  .logo { width:64px; height:64px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center;
+          border-radius:18px; background:var(--espresso); color:var(--cream); box-shadow:0 10px 24px rgba(91,58,28,.25); }
+  header.hero h1 { margin:0; font-size:60px; font-weight:900; line-height:.95; }
+  header.hero h1 .it { font-style:italic; color:var(--accent); }
+  header.hero p { max-width:440px; margin:16px auto 0; font-size:15px; line-height:1.6; color:var(--sub); }
+
+  section { scroll-margin-top:80px; border-top:1px solid var(--line2); padding:40px 0; }
+  .kicker { margin:0 0 4px; font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#b08a5a; }
+  section h2 { margin:0 0 20px; font-size:34px; }
+
+  .card { border:1px solid var(--line); background:var(--card); border-radius:24px; padding:24px; }
+  .bigcard { box-shadow:0 4px 30px rgba(91,58,28,.07); }
+  .row { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+  .lbl { font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+
+  /* slider custom */
+  .slider { -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:999px;
+            outline:none; cursor:pointer; }
+  .slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%;
+            background:var(--espresso); border:4px solid var(--cream); box-shadow:0 2px 8px rgba(91,58,28,.4); cursor:pointer; }
+  .slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:var(--espresso);
+            border:4px solid var(--cream); box-shadow:0 2px 8px rgba(91,58,28,.4); cursor:pointer; }
+
+  .field { margin-bottom:20px; }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; }
+  .pill { border:1.5px solid var(--line); border-radius:999px; padding:8px 16px; font-size:14px; font-weight:500;
+          cursor:pointer; background:transparent; color:var(--sub); transition:.16s; font-family:inherit; }
+  .pill:hover { border-color:var(--accent); color:var(--accent); }
+  .pill.on { background:var(--espresso); border-color:var(--espresso); color:var(--cream); font-weight:600;
+             box-shadow:0 3px 12px rgba(91,58,28,.28); transform:translateY(-1px); }
+  .nota { margin-top:10px; font-size:13px; line-height:1.5; color:var(--sub); background:#f6ecda;
+          border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:8px 12px; }
+
+  .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media(min-width:680px){ .stats{ grid-template-columns:repeat(4,1fr);} }
+  .stat { border:1px solid var(--line); background:#fbf4e8; border-radius:16px; padding:16px; }
+  .stat .top { display:flex; align-items:center; gap:8px; color:var(--muted);
+               font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+  .stat .val { margin-top:6px; font-family:'Fraunces',serif; font-size:30px; line-height:1; color:var(--ink); }
+  .stat .val small { font-size:15px; color:var(--muted); margin-left:4px; }
+
+  .tl { list-style:none; margin:0; padding:0; }
+  .tl li { display:flex; gap:16px; margin-bottom:12px; }
+  .tl .t { width:48px; flex:none; font-family:'Fraunces',serif; font-size:14px; font-weight:600; color:#b08a5a; }
+  .tl .x { font-size:15px; color:var(--body); }
+
+  .grid3 { display:grid; gap:12px; }
+  @media(min-width:680px){ .grid3{ grid-template-columns:repeat(3,1fr);} }
+  .grid2 { display:grid; gap:10px; }
+  @media(min-width:680px){ .grid2{ grid-template-columns:repeat(2,1fr);} }
+
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  .tablewrap { overflow:hidden; border:1px solid var(--line); border-radius:16px; }
+  thead { background:var(--espresso); color:var(--cream); }
+  th,td { padding:12px; text-align:left; }
+  tbody tr:nth-child(even){ background:#faf3e7; }
+
+  .acc { overflow:hidden; border:1px solid var(--line); background:var(--card); border-radius:16px; margin-bottom:8px; }
+  .acc button { display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px;
+                padding:16px; border:0; background:none; cursor:pointer; text-align:left; font-family:inherit; font-size:15px; color:var(--ink); }
+  .acc .abody { border-top:1px solid #efe2cf; background:#faf3e7; padding:12px 16px; font-size:14px; color:var(--sub); }
+  .chev { transition:transform .2s; flex:none; color:#b08a5a; }
+  .chev.open { transform:rotate(180deg); }
+
+  footer { margin-top:40px; border-top:1px solid var(--line2); padding-top:32px;
+           text-align:center; font-size:12px; color:var(--muted); }
+  footer .it { font-style:italic; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useMemo, useEffect } = React;
+
+const I = (d) => (props) => (
+  <svg width={props.size||18} height={props.size||18} viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth={props.sw||2} strokeLinecap="round" strokeLinejoin="round" className={props.className}>
+    {d}
+  </svg>
+);
+const Coffee = I(<><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></>);
+const Droplet = I(<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7Z"/>);
+const Thermo = I(<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0Z"/>);
+const Gear = I(<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></>);
+const Beaker = I(<><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></>);
+const Timer = I(<><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></>);
+const Alert = I(<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>);
+const Chev = I(<polyline points="6 9 12 15 18 9"/>);
+
+const ROASTS = {
+  clara:{label:"Clara",clicks:13,temp:96}, mediaClara:{label:"Média-clara",clicks:14,temp:95},
+  media:{label:"Média",clicks:14,temp:94}, mediaEscura:{label:"Média-escura",clicks:16,temp:90},
+  escura:{label:"Escura",clicks:18,temp:88},
+};
+const PROCESSES = {
+  washed:{label:"Lavado",dClick:0,dTemp:0,ratio:16.0,nota:"Limpo e brilhante. Mostra a origem com transparência. Acidez nítida."},
+  natural:{label:"Natural",dClick:1,dTemp:-2,ratio:16.6,nota:"Cereja seca inteira. Corpo cheio, doçura intensa, notas frutadas selvagens."},
+  honey:{label:"Honey",dClick:0,dTemp:-1,ratio:16.0,nota:"Meio-termo: parte da mucilagem fica no grão. Doce, corpo médio-cheio."},
+  anaerobio:{label:"Anaeróbico",dClick:1,dTemp:-3,ratio:17.0,nota:"Fermentado em tanque selado sem oxigênio. Winey, intenso, tropical."},
+  carbonica:{label:"Maceração carbônica",dClick:1,dTemp:-3,ratio:17.0,nota:"Cereja inteira fermentada em CO₂ (técnica do vinho). Muito aromático."},
+  cofermento:{label:"Co-fermentado",dClick:2,dTemp:-3,ratio:17.0,nota:"Fermentado com frutas/leveduras adicionadas. Sabor extremo e divisivo."},
+};
+const ORIGINS = [
+  ["Etiópia (washed)","Floral, cítrico, chá, corpo leve, acidez alta"],
+  ["Etiópia (natural)","Mirtilo, morango, vinhoso, doçura tropical"],
+  ["Quênia AA","Groselha negra, tomate, acidez fosfórica intensa"],
+  ["Colômbia","Caramelo, chocolate ao leite, frutas vermelhas"],
+  ["Brasil","Chocolate, nozes, amendoim, baixa acidez, cremoso"],
+  ["Costa Rica (honey)","Mel, frutas amarelas, doçura limpa"],
+  ["Guatemala","Cacau, especiarias, frutas vermelhas, elegante"],
+  ["Panamá Geisha","Floral exuberante, bergamota, jasmim, mel"],
+  ["Indonésia","Terroso, especiarias, corpo cheio, defumado"],
+];
+const TROUBLE = [
+  {s:"Drena rápido demais (<2:00) + azedo",d:"Moagem grossa demais",f:"2–3 cliques mais fino"},
+  {s:"Drena lento demais (>4:00) + amargo",d:"Moagem fina demais / muitos finos",f:"2–3 cliques mais grosso, menos agitação"},
+  {s:"Azedo / raso, mas tempo OK",d:"Sub-extração (temp baixa ou pouca agitação)",f:"Subir temp 2 °C, mais swirl"},
+  {s:"Amargo / seco, mas tempo OK",d:"Super-extração (temp alta ou agitação excessiva)",f:"Baixar temp 2 °C, menos agitação"},
+  {s:"Bloom não infla",d:"Café velho, já desgaseificado",f:"Use café mais fresco; bloom 2×"},
+  {s:"Bloom explode / transborda",d:"Café muito fresco",f:"Espere 3–5 dias; use bloom 3×"},
+  {s:"Cama final com paredes altas",d:"Channeling (canais)",f:"Despejo mais central, swirl ao final"},
+  {s:"Entope (stalling total)",d:"Excesso de finos",f:"Moagem mais grossa, troque o filtro"},
+];
+const SECTIONS = [["receita","Receita"],["teoria","Teoria"],["moagem","Moagem"],["origens","Origens"],["problemas","Problemas"]];
+const GRIND = [["Espresso","5–10","Fina"],["Moka pot","10–13","Média-fina"],["V60 (recomendado)","11–18","Média a média-fina"],["Chemex","18–24","Média-grossa"],["French Press","19–25","Grossa"]];
+const THEORY = [
+  ["Sub-extração","<18%","Azedo, salgado, raso, aguado","Moa mais fino, água mais quente, mais contato","#9d2b2b"],
+  ["Golden Cup","18–22%","Doce, brilhante, final limpo e longo","Mantenha. Anote tudo e repita.","#2d6a4f"],
+  ["Super-extração",">22%","Amargo, adstringente, seco","Moa mais grosso, água mais fria, menos contato","#9d2b2b"],
+];
+
+function Stat({icon:Icon,label,value,unit}){
+  return (
+    <div className="stat">
+      <div className="top"><Icon size={15}/><span>{label}</span></div>
+      <div className="val">{value}{unit && <small>{unit}</small>}</div>
+    </div>
+  );
+}
+
+function App(){
+  const [dose,setDose] = useState(15);
+  const [roast,setRoast] = useState("media");
+  const [process,setProcess] = useState("washed");
+  const [openT,setOpenT] = useState(null);
+  const [active,setActive] = useState("receita");
+  const r = ROASTS[roast], p = PROCESSES[process];
+
+  const rec = useMemo(()=>{
+    const clicks = Math.max(6, r.clicks + p.dClick);
+    const temp = r.temp + p.dTemp;
+    const water = Math.round(dose * p.ratio);
+    return { clicks, temp, ratio:p.ratio, water, bloom:dose*2, firstPour:Math.round(water*0.6) };
+  },[dose,r,p]);
+
+  useEffect(()=>{
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting) setActive(e.target.id); });
+    },{ rootMargin:"-45% 0px -50% 0px" });
+    SECTIONS.forEach(([id])=>{ const el=document.getElementById(id); if(el) obs.observe(el); });
+    return ()=>obs.disconnect();
+  },[]);
+
+  const go = (id)=>{ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); };
+
+  const pct = ((dose-10)/(30-10))*100;
+  const sliderBg = { background:`linear-gradient(to right, var(--accent) ${pct}%, var(--track) ${pct}%)` };
+
+  return (
+    <div className="wrap">
+      <nav className="bar">
+        {SECTIONS.map(([id,l])=>
+          <button key={id} className={active===id?"active":""} onClick={()=>go(id)}>{l}</button>)}
+      </nav>
+
+      <header className="hero">
+        <div className="logo"><Coffee size={30} sw={1.8}/></div>
+        <h1 className="font-display">Cookbook<br/><span className="it">V60</span></h1>
+        <p>Um método base sólido e suas variações por torra, processo e grão — calibrado para o Timemore C3S Pro.</p>
+      </header>
+
+      <section id="receita">
+        <p className="kicker font-display">Método base + variações</p>
+        <h2 className="font-display">Calculadora</h2>
+
+        <div className="card bigcard">
+          <div className="field">
+            <div className="row"><span className="lbl">Dose de café</span>
+              <span className="font-display" style={{fontSize:26}}>{dose} g</span></div>
+            <input className="slider" type="range" min={10} max={30} step={1} value={dose}
+                   style={sliderBg} onChange={e=>setDose(+e.target.value)}/>
+          </div>
+
+          <div className="field">
+            <p className="lbl" style={{marginBottom:10}}>Torra</p>
+            <div className="pills">
+              {Object.entries(ROASTS).map(([k,v])=>
+                <button key={k} className={"pill"+(roast===k?" on":"")} onClick={()=>setRoast(k)}>{v.label}</button>)}
+            </div>
+          </div>
+
+          <div className="field">
+            <p className="lbl" style={{marginBottom:10}}>Processo do grão</p>
+            <div className="pills">
+              {Object.entries(PROCESSES).map(([k,v])=>
+                <button key={k} className={"pill"+(process===k?" on":"")} onClick={()=>setProcess(k)}>{v.label}</button>)}
+            </div>
+            <p className="nota">{p.nota}</p>
+          </div>
+
+          <div className="stats">
+            <Stat icon={Droplet} label="Água" value={rec.water} unit="g"/>
+            <Stat icon={Gear} label="Moagem" value={rec.clicks} unit="cliques"/>
+            <Stat icon={Thermo} label="Temp." value={rec.temp} unit="°C"/>
+            <Stat icon={Beaker} label="Proporção" value={"1:"+rec.ratio} unit=""/>
+          </div>
+        </div>
+
+        <div className="card" style={{marginTop:24}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,color:"var(--accent)",marginBottom:16}}>
+            <Timer size={18}/><span className="font-display" style={{fontSize:18}}>Sequência de despejos</span>
+          </div>
+          <ol className="tl">
+            {[["0:00",`Bloom: despeje ${rec.bloom} g de água, swirl gentil`],
+              ["0:45",`Despejo 1: complete até ${rec.firstPour} g (60%) em espiral`],
+              ["1:15",`Despejo 2: complete até ${rec.water} g`],
+              ["1:50","Swirl final para nivelar a cama"],
+              ["~3:00","Drawdown completo — sirva"]].map(([t,x],i)=>
+              <li key={i}><span className="t">{t}</span><span className="x">{x}</span></li>)}
+          </ol>
+        </div>
+      </section>
+
+      <section id="teoria">
+        <p className="kicker font-display">Fundamentos</p>
+        <h2 className="font-display">Extração em uma página</h2>
+        <div className="grid3">
+          {THEORY.map(([t,range,sinal,fix,c])=>
+            <div key={t} className="card" style={{padding:20}}>
+              <div className="font-display" style={{fontSize:18,color:c}}>{t}</div>
+              <div style={{fontSize:14,fontWeight:600,color:"var(--muted)",marginBottom:8}}>{range}</div>
+              <p style={{fontSize:14,color:"var(--body)",margin:"0 0 8px"}}>{sinal}</p>
+              <p style={{fontSize:12,fontStyle:"italic",color:"var(--muted)",margin:0}}>{fix}</p>
+            </div>)}
+        </div>
+        <p style={{fontSize:15,lineHeight:1.6,color:"var(--body)",marginTop:20}}>
+          O padrão SCA "Golden Cup": força (TDS) de 1,15–1,35% a partir de uma extração de 18–22%, água a 93 °C ±3 °C.
+          As maiores alavancas, em ordem: <strong>moagem → proporção → temperatura → agitação → tempo</strong>.
+        </p>
+      </section>
+
+      <section id="moagem">
+        <p className="kicker font-display">Timemore C3S Pro</p>
+        <h2 className="font-display">Moagem em cliques</h2>
+        <div className="tablewrap">
+          <table>
+            <thead><tr><th>Método</th><th>Cliques</th><th>Granulometria</th></tr></thead>
+            <tbody>
+              {GRIND.map(([m,c,g])=>
+                <tr key={m}>
+                  <td style={m.includes("V60")?{fontWeight:600,color:"var(--accent)"}:{color:"var(--body)"}}>{m}</td>
+                  <td style={{color:"var(--body)"}}>{c}</td>
+                  <td style={{color:"var(--muted)"}}>{g}</td>
+                </tr>)}
+            </tbody>
+          </table>
+        </div>
+        <p style={{fontSize:15,lineHeight:1.6,color:"var(--body)",marginTop:16}}>
+          83 µm por clique · 12 cliques por volta · mós S2C660 de 38 mm em aço inox.
+          Ponto de partida universal: <strong>14 cliques</strong>. Mais clara/densa → mais fino; mais escura → mais grossa.
+        </p>
+      </section>
+
+      <section id="origens">
+        <p className="kicker font-display">Sensorial</p>
+        <h2 className="font-display">Perfis por origem</h2>
+        <div className="grid2">
+          {ORIGINS.map(([o,n])=>
+            <div key={o} className="card" style={{padding:16,borderRadius:12}}>
+              <div className="font-display" style={{fontSize:16}}>{o}</div>
+              <p style={{fontSize:14,color:"var(--sub)",margin:"2px 0 0"}}>{n}</p>
+            </div>)}
+        </div>
+      </section>
+
+      <section id="problemas">
+        <p className="kicker font-display">Diagnóstico</p>
+        <h2 className="font-display">Resolvendo problemas</h2>
+        {TROUBLE.map((t,i)=>
+          <div key={i} className="acc">
+            <button onClick={()=>setOpenT(openT===i?null:i)}>
+              <span style={{display:"flex",alignItems:"center",gap:10}}>
+                <Alert size={16}/>{t.s}
+              </span>
+              <Chev size={18} className={"chev"+(openT===i?" open":"")}/>
+            </button>
+            {openT===i &&
+              <div className="abody">
+                <p style={{margin:0}}><strong style={{color:"var(--body)"}}>Causa:</strong> {t.d}</p>
+                <p style={{margin:"4px 0 0"}}><strong style={{color:"var(--body)"}}>Solução:</strong> {t.f}</p>
+              </div>}
+          </div>)}
+      </section>
+
+      <footer>
+        ☕ Cookbook V60 · 2026 · Calibrado para Timemore C3S Pro<br/>
+        <span className="it">Comece pelo método base. Prove com atenção. Ajuste uma variável por vez.</span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
