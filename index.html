@@ -102,6 +102,12 @@
   .warn-item { display:flex; align-items:flex-start; gap:8px; padding:10px 14px; margin-top:8px;
                border-radius:12px; background:#fff8e1; border-left:3px solid #e65100; font-size:13px; color:#bf360c; line-height:1.5; }
   .hint { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px; }
+  .export-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
+                padding:14px; border:none; border-radius:16px; background:var(--espresso);
+                color:var(--cream); font-size:15px; font-weight:600; font-family:inherit;
+                cursor:pointer; transition:.18s; margin-top:20px; box-shadow:0 4px 16px rgba(91,58,28,.2); }
+  .export-btn:hover { background:#4a2e15; box-shadow:0 6px 20px rgba(91,58,28,.35); }
+  .export-btn:active { transform:scale(.98); }
 
   footer { margin-top:40px; border-top:1px solid var(--line2); padding-top:32px;
            text-align:center; font-size:12px; color:var(--muted); }
@@ -128,6 +134,7 @@ const Beaker = I(<><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0
 const Timer = I(<><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></>);
 const Alert = I(<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>);
 const Chev = I(<polyline points="6 9 12 15 18 9"/>);
+const DlIcon = I(<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>);
 
 const ROASTS = {
   clara:{label:"Clara",clicks:13,temp:96}, mediaClara:{label:"Média-clara",clicks:14,temp:95},
@@ -243,6 +250,94 @@ function genPours(dose,water,pours,dist,timeEst){
     seq.push({t:"~"+fmtSec(timeEst),d:"Drawdown completo — sirva"});
   }
   return seq;
+}
+
+function exportRecipe(p){
+  var DPR=2,W=390,M=20,CW=W-2*M;
+  var H=586+(p.pours>1?28:0)+p.seq.length*26;
+  var cv=document.createElement("canvas");cv.width=W*DPR;cv.height=H*DPR;
+  var c=cv.getContext("2d");c.scale(DPR,DPR);
+  function rr(x,y,w,h,r){c.beginPath();c.roundRect(x,y,w,h,r);}
+  function sbox(sx,sy,sw,sh,val,lbl){
+    c.fillStyle="#fbf4e8";rr(sx,sy,sw,sh,10);c.fill();
+    c.strokeStyle="#e3d3bd";c.lineWidth=1;c.stroke();
+    c.fillStyle="#3a2414";c.font="600 20px 'Fraunces',Georgia,serif";
+    c.textAlign="center";c.fillText(val,sx+sw/2,sy+26);
+    c.fillStyle="#9c7a52";c.font="600 9px 'Spline Sans',sans-serif";
+    c.fillText(lbl,sx+sw/2,sy+44);c.textAlign="left";
+  }
+  function div(dy){c.strokeStyle="#e3d3bd";c.lineWidth=1;c.beginPath();c.moveTo(M,dy);c.lineTo(M+CW,dy);c.stroke();}
+  function slbl(sy,t){c.fillStyle="#b08a5a";c.font="600 10px 'Spline Sans',sans-serif";c.fillText(t,M,sy);}
+
+  var y=0;
+  c.fillStyle="#f7efe2";c.fillRect(0,0,W,H);
+
+  c.fillStyle="#5b3a1c";rr(0,0,W,70,[0,0,16,16]);c.fill();
+  c.fillStyle="#f6ecdc";c.font="900 26px 'Fraunces',Georgia,serif";
+  c.fillText("☕  Cookbook V60",M,44);
+  y=90;
+
+  slbl(y,"MÉTODO");y+=18;
+  c.fillStyle="#3a2414";c.font="600 20px 'Fraunces',Georgia,serif";
+  c.fillText(p.preset||"Personalizado",M,y);y+=28;
+
+  var bw=(CW-16)/3,bh=58;
+  sbox(M,y,bw,bh,p.dose+"g","DOSE");
+  sbox(M+bw+8,y,bw,bh,p.water+"g","ÁGUA");
+  sbox(M+2*(bw+8),y,bw,bh,"1:"+p.ratio.toFixed(1),"PROPORÇÃO");
+  y+=bh+8;
+  sbox(M,y,bw,bh,p.grind+" cl","MOAGEM");
+  sbox(M+bw+8,y,bw,bh,p.temp+"°C","TEMP.");
+  sbox(M+2*(bw+8),y,bw,bh,p.pours+"×","DESPEJOS");
+  y+=bh;
+
+  if(p.pours>1){
+    y+=12;c.fillStyle="#9c7a52";c.font="500 12px 'Spline Sans',sans-serif";
+    c.fillText("Distribuição frontal: "+p.dist+"%",M,y);y+=16;
+  }
+
+  y+=12;div(y);y+=16;
+  slbl(y,"RESULTADO");y+=18;
+  c.fillStyle="#3a2414";c.font="600 16px 'Fraunces',Georgia,serif";
+  c.fillText("EY "+p.ey.toFixed(1)+"%",M,y);
+  c.fillText("TDS "+p.tds.toFixed(2)+"%",M+120,y);
+  c.fillText("Tempo ≈"+fmtSec(p.time),M+248,y);y+=16;
+
+  var sc={gold:["#e8f5e9","#2e7d32"],under:["#fff8e1","#f57f17"],over:["#fce4ec","#c62828"]}[p.sca.c];
+  c.font="600 11px 'Spline Sans',sans-serif";
+  var tw=c.measureText(p.sca.l).width+24;
+  c.fillStyle=sc[0];rr(M,y,tw,24,12);c.fill();
+  c.fillStyle=sc[1];c.fillText(p.sca.l,M+12,y+16);y+=36;
+
+  div(y);y+=16;
+  slbl(y,"PERFIL SENSORIAL");y+=16;
+  [["Acidez",p.sens.acidity,"#d4a017"],["Doçura",p.sens.sweetness,"#2e7d32"],
+   ["Amargor",p.sens.bitterness,"#8b4513"],["Corpo",p.sens.body,"#5b3a1c"],
+   ["Adstring.",p.sens.astringency,"#9d2b2b"]].forEach(function(b){
+    c.fillStyle="#9c7a52";c.font="600 9px 'Spline Sans',sans-serif";
+    c.textAlign="right";c.fillText(b[0].toUpperCase(),M+65,y+11);
+    var tx=M+75,bw2=CW-75-35;
+    c.fillStyle="#e7d8c1";rr(tx,y+3,bw2,8,4);c.fill();
+    if(b[1]>0.1){c.fillStyle=b[2];rr(tx,y+3,Math.max(4,bw2*b[1]/10),8,4);c.fill();}
+    c.textAlign="right";c.fillStyle=b[2];c.font="600 10px 'Spline Sans',sans-serif";
+    c.fillText(b[1].toFixed(1),M+CW,y+12);c.textAlign="left";y+=24;
+  });
+
+  y+=4;div(y);y+=16;
+  slbl(y,"SEQUÊNCIA DE DESPEJOS");y+=16;
+  p.seq.forEach(function(s){
+    c.fillStyle="#b08a5a";c.font="600 11px 'Fraunces',Georgia,serif";c.fillText(s.t,M,y+12);
+    c.fillStyle="#5a432d";c.font="400 12px 'Spline Sans',sans-serif";c.fillText(s.d,M+52,y+12);y+=26;
+  });
+
+  y+=10;c.fillStyle="#9c7a52";c.font="400 10px 'Spline Sans',sans-serif";c.textAlign="center";
+  c.fillText("cookbook v60 · "+new Date().toLocaleDateString("pt-BR"),W/2,y+10);c.textAlign="left";
+
+  cv.toBlob(function(blob){
+    var u=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=u;a.download="receita-v60.png";document.body.appendChild(a);a.click();
+    document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},1000);
+  },"image/png");
 }
 
 function Stat({icon:Icon,label,value,unit}){
@@ -501,6 +596,12 @@ function App(){
               <li key={i}><span className="t">{s.t}</span><span className="x">{s.d}</span></li>)}
           </ol>
         </div>
+
+        <button className="export-btn" onClick={()=>exportRecipe({
+          dose:sD,water:simW,ratio:sR,grind:sG,temp:sT,pours:sP,dist:sDist,
+          ey:simEY,tds:simTDS,time:simTime,sca:simSCA,sens:simSens,seq:simSeq,
+          preset:sPreset?PRESETS[sPreset].label:null
+        })}><DlIcon size={18}/>Exportar receita como imagem</button>
       </section>
 
       <section id="teoria">
